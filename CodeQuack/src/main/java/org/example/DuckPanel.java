@@ -16,18 +16,24 @@ public class DuckPanel extends JPanel {
     private JScrollPane scrollPane;
     private JTextField inputField;
     private DuckService duckService;
+    private Icon duckIcon;
+    private Icon userIcon;
 
     public DuckPanel() {
         this.duckService = new DuckService();
         setLayout(new BorderLayout());
         setBackground(UIUtil.getPanelBackground());
 
+        // Load icons
+        duckIcon = IconLoader.getIcon("/META-INF/duck.svg", DuckPanel.class);
+        // You can use a default user icon or load a custom one
+        userIcon = UIManager.getIcon("OptionPane.questionIcon"); // Placeholder, replace with your icon
+
         // Header with duck icon
         JPanel headerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         headerPanel.setBackground(UIUtil.getPanelBackground());
         headerPanel.setBorder(JBUI.Borders.empty(8));
 
-        Icon duckIcon = IconLoader.getIcon("/META-INF/duck.svg", DuckPanel.class);
         JLabel iconLabel = new JLabel(duckIcon);
         JLabel titleLabel = new JLabel("Rubber Duck Debugging");
         titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 14f));
@@ -105,23 +111,35 @@ public class DuckPanel extends JPanel {
     }
 
     private void addMessage(String text, boolean isUser) {
-        JPanel messagePanel = new JPanel();
-        messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.X_AXIS));
-        messagePanel.setBackground(UIUtil.getPanelBackground());
-        messagePanel.setBorder(JBUI.Borders.empty(4, 0));
+        JPanel messageContainer = new JPanel(new BorderLayout(8, 0));
+        messageContainer.setBackground(UIUtil.getPanelBackground());
+        messageContainer.setBorder(JBUI.Borders.empty(4, 8));
 
-        if (isUser) {
-            messagePanel.add(Box.createHorizontalGlue());
-        }
+        // Profile icon
+        JLabel avatarLabel = new JLabel(isUser ? userIcon : duckIcon);
+        avatarLabel.setVerticalAlignment(SwingConstants.TOP);
 
+        // Message bubble
         RoundedBubblePanel bubble = createMessageBubble(text, isUser);
-        messagePanel.add(bubble);
 
-        if (!isUser) {
-            messagePanel.add(Box.createHorizontalGlue());
+        // Add components based on sender
+        if (isUser) {
+            JPanel rightPanel = new JPanel(new BorderLayout());
+            rightPanel.setBackground(UIUtil.getPanelBackground());
+            rightPanel.add(bubble, BorderLayout.EAST);
+
+            messageContainer.add(rightPanel, BorderLayout.CENTER);
+            messageContainer.add(avatarLabel, BorderLayout.EAST);
+        } else {
+            JPanel leftPanel = new JPanel(new BorderLayout());
+            leftPanel.setBackground(UIUtil.getPanelBackground());
+            leftPanel.add(bubble, BorderLayout.WEST);
+
+            messageContainer.add(avatarLabel, BorderLayout.WEST);
+            messageContainer.add(leftPanel, BorderLayout.CENTER);
         }
 
-        chatPanel.add(messagePanel);
+        chatPanel.add(messageContainer);
         chatPanel.revalidate();
         scrollToBottom();
     }
@@ -172,10 +190,14 @@ public class DuckPanel extends JPanel {
 
         return bubble;
     }
+
     private JPanel createTypingIndicator() {
-        JPanel indicator = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        indicator.setBackground(UIUtil.getPanelBackground());
-        indicator.setBorder(JBUI.Borders.empty(4, 0));
+        JPanel messageContainer = new JPanel(new BorderLayout(8, 0));
+        messageContainer.setBackground(UIUtil.getPanelBackground());
+        messageContainer.setBorder(JBUI.Borders.empty(4, 8));
+
+        JLabel avatarLabel = new JLabel(duckIcon);
+        avatarLabel.setVerticalAlignment(SwingConstants.TOP);
 
         Color bgColor = new JBColor(new Color(0xEBECF0), new Color(0x3C3F41));
         RoundedBubblePanel bubble = new RoundedBubblePanel(bgColor, 16);
@@ -185,8 +207,14 @@ public class DuckPanel extends JPanel {
         label.setForeground(UIUtil.getLabelForeground());
         bubble.add(label);
 
-        indicator.add(bubble);
-        return indicator;
+        JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setBackground(UIUtil.getPanelBackground());
+        leftPanel.add(bubble, BorderLayout.WEST);
+
+        messageContainer.add(avatarLabel, BorderLayout.WEST);
+        messageContainer.add(leftPanel, BorderLayout.CENTER);
+
+        return messageContainer;
     }
 
     private void scrollToBottom() {
