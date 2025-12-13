@@ -12,5 +12,11 @@
                     icon="org.example.CodeQuackIcons.PLUGIN_ICON"
                     anchor="right"
                     factoryClass="org.example.CodeQuackWindowFactory"/>
+
+        <notificationGroup
+                id="CodeQuack Notifications"
+                displayType="BALLOON"
+                isLogByDefault="false"/>
+        <postStartupActivity implementation="org.example.CodeQuackActivity"/>
     </extensions>
 </idea-plugin>
