@@ -1,9 +1,9 @@
 package org.example;
 
+import com.intellij.openapi.util.IconLoader;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class DuckPanel extends JPanel {
 
@@ -15,11 +15,8 @@ public class DuckPanel extends JPanel {
         this.duckService = new DuckService();
         setLayout(new BorderLayout());
 
-        // 1. Slika patkice (mora biti u src/main/resources/duck.png)
-        // Ako nemas sliku jos, ovaj red ce baciti gresku, zakomentarisi ga privremeno
-        // JLabel iconLabel = new JLabel(new ImageIcon(getClass().getResource("/duck.png")));
-        JLabel iconLabel = new JLabel("🦆", SwingConstants.CENTER); // Privremeni emoji dok ne nadjes sliku
-        iconLabel.setFont(new Font("Serif", Font.PLAIN, 50));
+        Icon icon = IconLoader.getIcon("/META-INF/duck.svg", DuckPanel.class);
+        JLabel iconLabel = new JLabel(icon);
         add(iconLabel, BorderLayout.NORTH);
 
         // 2. Chat area
@@ -38,7 +35,7 @@ public class DuckPanel extends JPanel {
             if (userText.trim().isEmpty()) return;
 
             // Prikazi korisnikov tekst odmah
-            appendChat("Ti: " + userText);
+            appendChat("You: " + userText);
             inputField.setText("");
 
             // POZIV SERVERA (Ovo mora u novi thread da ne blokira UI!)

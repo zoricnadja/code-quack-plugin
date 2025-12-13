@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.1.0"
 }
 
-group = "com.tvojeime"
+group = "org.example"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -27,12 +27,12 @@ dependencies {
 
 tasks {
     withType<JavaCompile> {
-        sourceCompatibility = "17"
-        targetCompatibility = "17"
+        sourceCompatibility = "21"
+        targetCompatibility = "21"
     }
 
     patchPluginXml {
         sinceBuild.set("242")
-        untilBuild.set("252.*")
+        untilBuild.set("243.*")
     }
 }
