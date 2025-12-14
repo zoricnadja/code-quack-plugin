@@ -23,6 +23,7 @@ dependencies {
     }
 
     implementation("org.json:json:20240303")
+    implementation("com.google.code.gson:gson:2.10.1")
 }
 
 tasks {

@@ -1,5 +1,8 @@
 package org.example;
 
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
@@ -10,9 +13,17 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.intellij.openapi.project.Project;
+import org.example.util.SoundManager;
 
 public class DuckPanel extends JPanel {
-
+    private Project project;
+    private Icon userIcon;
+    private JTextArea textArea;
     private final JPanel chatPanel;
     private final JScrollPane scrollPane;
     private final ExpandableTextArea inputField;
@@ -20,7 +31,11 @@ public class DuckPanel extends JPanel {
     private final DuckService duckService;
     private final Icon duckIcon;
 
-    public DuckPanel() {
+    private static Map<Project, DuckPanel> instances = new HashMap<>();
+
+    public DuckPanel(Project project) {
+        this.project = project;
+        instances.put(project, this);
         this.duckService = new DuckService();
         setLayout(new BorderLayout());
         setBackground(UIUtil.getPanelBackground());
@@ -97,20 +112,19 @@ public class DuckPanel extends JPanel {
         sendButton.setBorder(JBUI.Borders.empty(4));
         sendButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        sendButton.addActionListener(e -> sendMessage());
+        sendButton.addActionListener(e -> sendMessage(getSelectedCodeFromEditor(), inputField.getText().trim()));
         inputContainer.add(sendButton, BorderLayout.EAST);
 
         add(inputContainer, BorderLayout.SOUTH);
 
-        inputField.addActionListener(e -> sendMessage());
+        inputField.addActionListener(e -> sendMessage(getSelectedCodeFromEditor(), inputField.getText().trim()));
     }
 
-    private void sendMessage() {
-        String userText = inputField.getText();
-        if (userText.trim().isEmpty()) return;
+    private void sendMessage(String code, String userText) {
 
         addMessage(userText, true);
         inputField.setText("");
+
         sizeManager.updateSize();
 
         JPanel typingIndicator = createTypingIndicator();
@@ -118,14 +132,24 @@ public class DuckPanel extends JPanel {
         chatPanel.revalidate();
         scrollToBottom();
 
-        new Thread(() -> {
-            String response = duckService.askTheDuck(userText);
+        duckService.askTheDuck(code, userText)
+                .thenAccept(response -> {
+                    SwingUtilities.invokeLater(() -> {
+                        chatPanel.remove(typingIndicator);
+                        addMessage(response, false);
+                        SoundManager.playQuack();
 
-            SwingUtilities.invokeLater(() -> {
-                chatPanel.remove(typingIndicator);
-                addMessage(response, false);
-            });
-        }).start();
+                        chatPanel.revalidate();
+                        chatPanel.repaint();
+                    });
+                })
+                .exceptionally(ex -> {
+                    SwingUtilities.invokeLater(() -> {
+                        chatPanel.remove(typingIndicator);
+                        addMessage("Communication error: " + ex.getMessage(), false);
+                    });
+                    return null;
+                });
     }
 
     private void addMessage(String text, boolean isUser) {
@@ -275,5 +299,36 @@ public class DuckPanel extends JPanel {
             g2.dispose();
             super.paintComponent(g);
         }
+    }
+
+    private String getSelectedCodeFromEditor() {
+        FileEditorManager editorManager = FileEditorManager.getInstance(project);
+
+        Editor editor = editorManager.getSelectedTextEditor();
+
+        if (editor == null) {
+            return "";
+        }
+
+        SelectionModel selectionModel = editor.getSelectionModel();
+
+        String selectedText = selectionModel.getSelectedText();
+
+        if (selectedText != null && !selectedText.isEmpty()) {
+            return selectedText;
+        } else {
+            return "";
+        }
+    }
+
+    public static DuckPanel getInstanceForProject(Project project) {
+        return instances.get(project);
+    }
+
+    public void triggerQuestion(String code, String question) {
+        // Popuni UI
+        textArea.setText(question);
+
+        sendMessage(code, question);
     }
 }

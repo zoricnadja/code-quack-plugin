@@ -19,4 +19,16 @@
                 isLogByDefault="false"/>
         <postStartupActivity implementation="org.example.CodeQuackActivity"/>
     </extensions>
+
+    <actions>
+        <action id="org.example.AskDuck"
+                class="org.example.actions.AskDuckAction"
+                text="Ask Code Quack"
+                description="Asks the Rubber Duck about the selected code">
+
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl D"/>
+        </action>
+    </actions>
 </idea-plugin>

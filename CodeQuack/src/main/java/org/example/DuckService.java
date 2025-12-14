@@ -4,62 +4,61 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import org.json.JSONObject; // Mozda ces morati dodati org.json dependency, ili parsiraj rucno string
+import java.time.Duration;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import com.google.gson.Gson;
+import org.example.model.ChatRequest;
+import org.example.model.ChatResponse;
+import org.example.model.Message;
 
 public class DuckService {
+    private static final String BACKEND_URL = "http://localhost:8080/api/chats/messages";
 
-    // HACKATHON TIP: Za demo, stavi API key ovde.
-    // Ali pazi da ne pushujes ovo na javni GitHub!
-    private static final String API_KEY = "sk-proj-TVOJ-API-KEY-OVDE";
-    private static final String URL = "https://api.openai.com/v1/chat/completions";
+    private final HttpClient httpClient;
+    private final Gson gson;
 
-    public String askTheDuck(String userProblem) {
-        try {
-            // Rucno pravimo JSON string da izbegnemo dependencies ako zuris
-            // Ali bolje je koristiti Gson ili Jackson biblioteku
-            String jsonBody = "{"
-                    + "\"model\": \"gpt-3.5-turbo\","
-                    + "\"messages\": ["
-                    + "  {\"role\": \"system\", \"content\": \"You are a rubber duck debugger. Ask clarifying questions only. Do not give solutions.\"},"
-                    + "  {\"role\": \"user\", \"content\": \"" + escapeJson(userProblem) + "\"}"
-                    + "]"
-                    + "}";
+    private final List<Message> conversationHistory = new ArrayList<>();
 
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(URL))
-                    .header("Content-Type", "application/json")
-                    .header("Authorization", "Bearer " + API_KEY)
-                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-                    .build();
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            // Ovde bi trebalo parsirati JSON response da izvuces samo tekst
-            // Za hakaton, ako nemas parser, mozes koristiti prosti string manipulation
-            return extractContentFromResponse(response.body());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Kva kva! Došlo je do greške: " + e.getMessage();
-        }
+    public DuckService() {
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
+        this.gson = new Gson();
     }
 
-    // Veoma prljava pomocna metoda za hakaton brzinu
-    private String escapeJson(String text) {
-        return text.replace("\"", "\\\"").replace("\n", "\\n");
+    public CompletableFuture<String> askTheDuck(String codeContext, String userQuestion) {
+        ChatRequest requestPayload = new ChatRequest(conversationHistory , codeContext, userQuestion);
+        String jsonBody = gson.toJson(requestPayload);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(BACKEND_URL))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
+
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                .thenApply(response -> {
+                    if (response.statusCode() == 200) {
+                        ChatResponse chatResponse = gson.fromJson(response.body(), ChatResponse.class);
+                        String aiAnswer = chatResponse.getResponse();
+                        updateHistory(codeContext, userQuestion, aiAnswer);
+                        return aiAnswer;
+                    } else {
+                        return "Error: Backend returned status " + response.statusCode();
+                    }
+                })
+                .exceptionally(ex -> "Error connecting to backend: " + ex.getMessage());
     }
 
-    // Jos prljavija metoda za izvlacenje odgovora bez JSON biblioteke
-    private String extractContentFromResponse(String jsonResponse) {
-        // U realnosti koristi Jackson ili Gson biblioteku!
-        // Ovo je samo da proradi odmah:
-        String marker = "\"content\": \"";
-        int start = jsonResponse.indexOf(marker);
-        if (start == -1) return jsonResponse; // Vrati sve ako ne nadje
-        start += marker.length();
-        int end = jsonResponse.indexOf("\"", start);
-        String content = jsonResponse.substring(start, end);
-        return content.replace("\\n", "\n").replace("\\\"", "\"");
+    private synchronized void updateHistory(String code, String question, String answer) {
+        String fullUserMsg = "Code Context:\n" + code + "\n\nUser Question: " + question;
+
+        conversationHistory.add(new Message("user", fullUserMsg));
+        conversationHistory.add(new Message("assistant", answer));
     }
+
 }

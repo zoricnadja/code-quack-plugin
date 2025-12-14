@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 public class CodeQuackWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        DuckPanel duckPanel = new DuckPanel();
+        DuckPanel duckPanel = new DuckPanel(project);
         Content content = ContentFactory.getInstance().createContent(duckPanel, "", false);
         toolWindow.getContentManager().addContent(content);
     }
