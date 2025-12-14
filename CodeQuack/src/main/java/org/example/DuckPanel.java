@@ -23,7 +23,6 @@ import org.example.util.SoundManager;
 public class DuckPanel extends JPanel {
     private Project project;
     private Icon userIcon;
-    private JTextArea textArea;
     private final JPanel chatPanel;
     private final JScrollPane scrollPane;
     private final ExpandableTextArea inputField;
@@ -326,8 +325,7 @@ public class DuckPanel extends JPanel {
     }
 
     public void triggerQuestion(String code, String question) {
-        // Popuni UI
-        textArea.setText(question);
+        inputField.setText(question);
 
         sendMessage(code, question);
     }
