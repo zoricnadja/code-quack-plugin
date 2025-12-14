@@ -12,6 +12,9 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.intellij.openapi.project.Project;
 
 public class DuckPanel extends JPanel {
@@ -23,9 +26,13 @@ public class DuckPanel extends JPanel {
     private DuckService duckService;
     private Icon duckIcon;
     private Icon userIcon;
+    private JTextArea textArea;
+
+    private static Map<Project, DuckPanel> instances = new HashMap<>();
 
     public DuckPanel(Project project) {
         this.project = project;
+        instances.put(project, this);
         this.duckService = new DuckService();
         setLayout(new BorderLayout());
         setBackground(UIUtil.getPanelBackground());
@@ -94,34 +101,38 @@ public class DuckPanel extends JPanel {
         inputField.addActionListener(e -> {
             String userText = inputField.getText();
             if (userText.trim().isEmpty()) return;
-
-            addMessage(userText, true);
-            inputField.setText("");
-
-            // Show typing indicator
-            JPanel typingIndicator = createTypingIndicator();
-            chatPanel.add(typingIndicator);
-            chatPanel.revalidate();
-            scrollToBottom();
-
-            duckService.askTheDuck(getSelectedCodeFromEditor(), userText)
-                    .thenAccept(response -> {
-                        SwingUtilities.invokeLater(() -> {
-                            chatPanel.remove(typingIndicator);
-                            addMessage(response, false);
-
-                            chatPanel.revalidate();
-                            chatPanel.repaint();
-                        });
-                    })
-                    .exceptionally(ex -> {
-                        SwingUtilities.invokeLater(() -> {
-                            chatPanel.remove(typingIndicator);
-                            addMessage("Communication error: " + ex.getMessage(), false);
-                        });
-                        return null;
-                    });
+            sendMessage(getSelectedCodeFromEditor(),userText);
         });
+    }
+
+    private void sendMessage(String code, String userText) {
+
+        addMessage(userText, true);
+        inputField.setText("");
+
+        // Show typing indicator
+        JPanel typingIndicator = createTypingIndicator();
+        chatPanel.add(typingIndicator);
+        chatPanel.revalidate();
+        scrollToBottom();
+
+        duckService.askTheDuck(code, userText)
+                .thenAccept(response -> {
+                    SwingUtilities.invokeLater(() -> {
+                        chatPanel.remove(typingIndicator);
+                        addMessage(response, false);
+
+                        chatPanel.revalidate();
+                        chatPanel.repaint();
+                    });
+                })
+                .exceptionally(ex -> {
+                    SwingUtilities.invokeLater(() -> {
+                        chatPanel.remove(typingIndicator);
+                        addMessage("Communication error: " + ex.getMessage(), false);
+                    });
+                    return null;
+                });
     }
 
     private void addMessage(String text, boolean isUser) {
@@ -174,7 +185,7 @@ public class DuckPanel extends JPanel {
         int verticalPadding = 10;
         bubble.setBorder(JBUI.Borders.empty(verticalPadding, horizontalPadding));
 
-        JTextArea textArea = new JTextArea(text);
+        textArea = new JTextArea(text);
         textArea.setEditable(false);
         textArea.setLineWrap(true);
         textArea.setWrapStyleWord(true);
@@ -281,5 +292,16 @@ public class DuckPanel extends JPanel {
         } else {
             return "";
         }
+    }
+
+    public static DuckPanel getInstanceForProject(Project project) {
+        return instances.get(project);
+    }
+
+    public void triggerQuestion(String code, String question) {
+        // Popuni UI
+        textArea.setText(question);
+
+        sendMessage(code, question);
     }
 }
