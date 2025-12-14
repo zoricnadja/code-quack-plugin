@@ -36,6 +36,7 @@ public class QuestionService {
 
         List<Message> allMessages = new ArrayList<>();
 
+
         allMessages.add(new Message("system", SYSTEM_PROMPT));
 
         if (messageDTO.getHistory() != null && !messageDTO.getHistory().isEmpty()) {
@@ -47,6 +48,7 @@ public class QuestionService {
 
         Message userMessage = new Message("user", userContent);
 
+        allMessages.add(userMessage);
 
         OpenAiRequest request = new OpenAiRequest(MODEL, allMessages);
 
