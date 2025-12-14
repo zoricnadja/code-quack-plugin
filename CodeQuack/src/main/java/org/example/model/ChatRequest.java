@@ -4,12 +4,12 @@ import java.util.Collections;
 import java.util.List;
 
 public class ChatRequest {
-    private List<Object> history; // Koristimo Object jer je lista prazna, ne treba nam Message klasa jos
+    private List<Message> history;
     private String codeContext;
     private String userProblem;
 
-    public ChatRequest(String codeContext, String userProblem) {
-        this.history = Collections.emptyList(); // Uvek saljemo praznu istoriju (Stateless)
+    public ChatRequest(List<Message> history ,String codeContext, String userProblem) {
+        this.history = history;
         this.codeContext = codeContext;
         this.userProblem = userProblem;
     }

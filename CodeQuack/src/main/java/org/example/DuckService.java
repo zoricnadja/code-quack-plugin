@@ -6,16 +6,22 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 import com.google.gson.Gson;
 import org.example.model.ChatRequest;
 import org.example.model.ChatResponse;
+import org.example.model.Message;
+
 public class DuckService {
     private static final String BACKEND_URL = "http://localhost:8080/api/chats/messages";
 
     private final HttpClient httpClient;
     private final Gson gson;
+
+    private final List<Message> conversationHistory = new ArrayList<>();
 
     public DuckService() {
         this.httpClient = HttpClient.newBuilder()
@@ -25,7 +31,7 @@ public class DuckService {
     }
 
     public CompletableFuture<String> askTheDuck(String codeContext, String userQuestion) {
-        ChatRequest requestPayload = new ChatRequest(codeContext, userQuestion);
+        ChatRequest requestPayload = new ChatRequest(conversationHistory , codeContext, userQuestion);
         String jsonBody = gson.toJson(requestPayload);
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -38,12 +44,21 @@ public class DuckService {
                 .thenApply(response -> {
                     if (response.statusCode() == 200) {
                         ChatResponse chatResponse = gson.fromJson(response.body(), ChatResponse.class);
-                        return chatResponse.getResponse();
+                        String aiAnswer = chatResponse.getResponse();
+                        updateHistory(codeContext, userQuestion, aiAnswer);
+                        return aiAnswer;
                     } else {
                         return "Error: Backend returned status " + response.statusCode();
                     }
                 })
                 .exceptionally(ex -> "Error connecting to backend: " + ex.getMessage());
+    }
+
+    private synchronized void updateHistory(String code, String question, String answer) {
+        String fullUserMsg = "Code Context:\n" + code + "\n\nUser Question: " + question;
+
+        conversationHistory.add(new Message("user", fullUserMsg));
+        conversationHistory.add(new Message("assistant", answer));
     }
 
 }
