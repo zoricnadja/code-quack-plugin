@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.intellij.openapi.project.Project;
+import org.example.util.SoundManager;
 
 public class DuckPanel extends JPanel {
     private Project project;
@@ -121,6 +122,7 @@ public class DuckPanel extends JPanel {
                     SwingUtilities.invokeLater(() -> {
                         chatPanel.remove(typingIndicator);
                         addMessage(response, false);
+                        SoundManager.playQuack();
 
                         chatPanel.revalidate();
                         chatPanel.repaint();
