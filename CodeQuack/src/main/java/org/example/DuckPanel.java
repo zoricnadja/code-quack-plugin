@@ -66,7 +66,7 @@ public class DuckPanel extends JPanel {
                 JBUI.Borders.empty(8, 10)
         ));
 
-        inputField = new ExpandableTextArea(CodeQuackBundle.message("area.placeholder"), 12, 12, 2);
+        inputField = new ExpandableTextArea(CodeQuackBundle.message("area.placeholder"), 12, 12, 1);
         inputField.setLineWrap(true);
         inputField.setWrapStyleWord(true);
         inputField.setBorder(null);

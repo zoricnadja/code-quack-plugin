@@ -16,25 +16,32 @@ public class TextAreaSizeManager {
             FontMetrics fm = textArea.getFontMetrics(textArea.getFont());
 
             int lineCount = getWrappedLineCount();
-            lineCount++;
-
             int rows = Math.max(textArea.getMinRows(), lineCount);
 
             int lineHeight = fm.getHeight();
-            int textHeight = rows * lineHeight;
-            int paddingHeight = JBUI.scale(8);
-            int newHeight = textHeight + paddingHeight;
+            int textHeight = lineCount * lineHeight;
+
+            int minHeight = textArea.getMinRows() * lineHeight;
+
+            int horizontalPadding = JBUI.scale(10);
+
+            int availableSpace = minHeight - textHeight;
+            int verticalPadding = Math.max(JBUI.scale(4), availableSpace / 2);
+
+            int newHeight = textHeight + (verticalPadding * 2);
 
             int width = textArea.getWidth();
             if (width <= 0) {
                 width = JBUI.scale(200);
             }
 
+            textArea.setMargin(JBUI.insets(verticalPadding, horizontalPadding, verticalPadding, horizontalPadding));
+
             Dimension newSize = new Dimension(width, newHeight);
 
             textArea.setPreferredSize(newSize);
             textArea.setMinimumSize(
-                    new Dimension(width, textArea.getMinRows() * lineHeight + paddingHeight));
+                    new Dimension(width, minHeight + (verticalPadding * 2)));
 
             Container parent = textArea.getParent();
             if (parent instanceof JViewport) {
@@ -63,7 +70,7 @@ public class TextAreaSizeManager {
     private int getWrappedLineCount() {
         try {
             if (textArea.getText().isEmpty()) {
-                return 1;
+                return 0;
             }
 
             int availableWidth =
@@ -95,4 +102,3 @@ public class TextAreaSizeManager {
         }
     }
 }
-

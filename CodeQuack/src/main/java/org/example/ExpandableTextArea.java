@@ -88,7 +88,6 @@ public class ExpandableTextArea extends JBTextArea {
         if (placeholder == null || placeholder.isEmpty() || !this.getText().isEmpty()) {
             return;
         }
-
         final Graphics2D g = (Graphics2D) pG;
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setColor(JBColor.GRAY);
