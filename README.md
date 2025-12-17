@@ -1,14 +1,14 @@
-# 🦆 Code Quack
+# Code Quack
 
 **Code Quack** is a "Rubber Duck Debugging" tool integrated directly into IntelliJ IDEA. Instead of simply providing the solution, this AI assistant (powered by OpenAI) acts like a Socratic mentor—it asks probing questions to help you spot errors in your logic and debug your code yourself.
 
-## 🚀 System Architecture
+## System Architecture
 
 The project consists of two main components:
 1.  **Backend (Java/Spring Boot):** Acts as middleware that communicates with the OpenAI API, manages system prompts, and handles the chat context.
 2.  **IntelliJ Plugin (Java/Swing):** A client-side plugin that allows developers to select code, ask questions, and receive feedback directly within the IDE.
 
-## ✨ Features
+## Features
 
 * **Socratic Debugging:** The AI is instructed not to fix the code immediately but to ask questions about assumptions, variable states, and execution flow.
 * **Context Awareness:** The plugin automatically extracts the selected code snippet from the editor and sends it to the backend for analysis.
@@ -17,7 +17,7 @@ The project consists of two main components:
 * **Custom Input:** A popup dialog allows you to ask specific questions (e.g., *"Explain this loop"* or *"Why is this null?"*).
 * **Audio Feedback:** Fun "Quack" sound effect 🦆 upon interaction.
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
 * **Java:** 21
@@ -33,7 +33,7 @@ The project consists of two main components:
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### 1. Backend Setup
 
@@ -59,7 +59,7 @@ The project consists of two main components:
 
 ---
 
-## 📖 How to Use
+## How to Use
 
 1.  **Select Code:** Highlight a snippet of code in your editor that is causing issues.
 2.  **Ask the Duck:** Right-click and select **"Ask Rubber Duck"** (or use the Tool Window).
